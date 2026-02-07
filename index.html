@@ -1,84 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Magisk Font Maker</title>
-  </head>
-  <body>
-    <div id="app">
-      <header>
-        <h1>Magisk Font Maker</h1>
-        <p>Turn any font into a flashable Magisk module.</p>
-      </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magisk Font Maker</title>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Magisk Font Maker</h1>
+      <p>Turn any font into a flashable Magisk module.</p>
+    </header>
 
-      <main>
-        <!-- STEP 1: INITIAL UPLOAD -->
-        <div id="initial-upload" class="upload-zone">
-          <label for="font-upload" class="drop-area">
-            <span class="icon">📁</span>
-            <span class="text">Click to upload or drag font file</span>
-            <span class="subtext">.ttf, .otf, .ttc, .otc</span>
-          </label>
-          <input type="file" id="font-upload" accept=".ttf,.otf,.ttc,.otc" class="hidden" />
+    <main>
+      <div id="initial-upload" class="upload-zone">
+        <label for="font-upload" class="drop-area">
+          <span class="icon">📁</span>
+          <span class="text">Click to upload or drag font file</span>
+          <span class="subtext">.ttf, .otf, .ttc, .otc</span>
+        </label>
+        <input type="file" id="font-upload" accept=".ttf,.otf,.ttc,.otc" class="hidden" />
+      </div>
+
+      <section id="main-content" class="config-form hidden">
+        <div class="font-info-badge">
+          <span class="icon">🔤</span>
+          <span id="selected-font-name">font.ttf</span>
         </div>
 
-        <!-- STEP 2: CONFIGURATION -->
-        <section id="main-content" class="config-form hidden">
-          <div class="font-info-badge">
-            <span class="icon">🔤</span>
-            <span id="selected-font-name">font.ttf</span>
+        <div class="grid">
+          <div class="input-group">
+            <label for="mod-name">Module Name</label>
+            <input type="text" id="mod-name" placeholder="My Font" />
           </div>
+          <div class="input-group">
+            <label for="mod-author">Author</label>
+            <input type="text" id="mod-author" value="Magisk User" />
+          </div>
+        </div>
 
+        <div id="extra-fields" class="hidden">
           <div class="grid">
             <div class="input-group">
-              <label for="mod-name">Module Name</label>
-              <input type="text" id="mod-name" placeholder="My Font" />
+              <label for="mod-id">Module ID</label>
+              <input type="text" id="mod-id" />
             </div>
             <div class="input-group">
-              <label for="mod-author">Author</label>
-              <input type="text" id="mod-author" value="Magisk User" />
+              <label for="mod-version">Version</label>
+              <input type="text" id="mod-version" value="v1.0" />
             </div>
           </div>
-
-          <div id="extra-fields" class="hidden">
-            <div class="grid">
-              <div class="input-group">
-                <label for="mod-id">Module ID</label>
-                <input type="text" id="mod-id" />
-              </div>
-              <div class="input-group">
-                <label for="mod-version">Version</label>
-                <input type="text" id="mod-version" value="v1.0" />
-              </div>
-            </div>
-            
-            <div class="input-group">
-              <label>Font Overrides (/system/fonts)</label>
-              <div id="overrides-list" class="overrides-list">
-                <!-- Dynamic inputs here -->
-              </div>
-              <button id="add-override-btn" class="secondary-btn small-btn">+ Add Custom Filename</button>
-              <p class="input-hint">Targets /system/fonts. Includes a force-mount script to ensure the font sticks on A/B devices.</p>
-            </div>
-
-            <div class="input-group">
-              <label for="mod-desc">Description</label>
-              <textarea id="mod-desc" rows="2">Replaces system fonts with this custom font.</textarea>
-            </div>
+          
+          <div class="input-group">
+            <label>Font Overrides (/system/fonts)</label>
+            <div id="overrides-list" class="overrides-list"></div>
+            <button id="add-override-btn" class="secondary-btn small-btn">+ Add Custom Filename</button>
+            <p class="input-hint">Targets /system/fonts. Includes a force-mount script for A/B devices.</p>
           </div>
 
-          <div class="actions">
-            <button id="more-options-btn" class="secondary-btn">More Options</button>
-            <button id="generate-btn" class="primary-btn">Generate Module</button>
+          <div class="input-group">
+            <label for="mod-desc">Description</label>
+            <textarea id="mod-desc" rows="2">Replaces system fonts with this custom font.</textarea>
           </div>
-        </section>
+        </div>
 
-        <section id="status-container" class="hidden">
-          <p id="status-message"></p>
-        </section>
-      </main>
-    </div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+        <div class="actions">
+          <button id="more-options-btn" class="secondary-btn">More Options</button>
+          <button id="generate-btn" class="primary-btn">Generate Module</button>
+        </div>
+      </section>
+
+      <section id="status-container" class="hidden">
+        <p id="status-message"></p>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
 </html>
