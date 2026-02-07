@@ -1,88 +1,260 @@
 import './style.css'
 import JSZip from 'jszip'
 
-const $ = (id) => document.getElementById(id)
-const el = {
-  fontUpload: $('font-upload'), mainContent: $('main-content'), initialUpload: $('initial-upload'),
-  modId: $('mod-id'), modName: $('mod-name'), modAuthor: $('mod-author'), modVersion: $('mod-version'),
-  modDesc: $('mod-desc'), generateBtn: $('generate-btn'), moreOptionsBtn: $('more-options-btn'),
-  extraFields: $('extra-fields'), statusContainer: $('status-container'), statusMessage: $('status-message'),
-  selectedFontName: $('selected-font-name'), overridesList: $('overrides-list'), addOverrideBtn: $('add-override-btn')
+// Utilities
+const $ = (selector) => document.querySelector(selector)
+const $$ = (selector) => document.querySelectorAll(selector)
+
+// State
+const state = {
+  file: null,
+  fileName: '',
+  overrides: [
+    'Roboto-Regular.ttf', 'Roboto-Bold.ttf', 'Roboto-Italic.ttf', 'Roboto-BoldItalic.ttf',
+    'Roboto-Medium.ttf', 'Roboto-MediumItalic.ttf', 'Roboto-Light.ttf', 'Roboto-LightItalic.ttf',
+    'Roboto-Thin.ttf', 'Roboto-ThinItalic.ttf', 'RobotoStatic-Regular.ttf', 'Roboto-Variable.ttf'
+  ]
 }
 
-const DEFAULT_WEIGHTS = [
-  'Roboto-Regular.ttf', 'Roboto-Bold.ttf', 'Roboto-Italic.ttf', 'Roboto-BoldItalic.ttf',
-  'Roboto-Medium.ttf', 'Roboto-MediumItalic.ttf', 'Roboto-Light.ttf', 'Roboto-LightItalic.ttf',
-  'Roboto-Thin.ttf', 'Roboto-ThinItalic.ttf', 'RobotoStatic-Regular.ttf', 'Roboto-Variable.ttf'
-]
-
-el.modAuthor.value = localStorage.getItem('magisk-font-author') || 'Magisk User'
-const weightsToUse = JSON.parse(localStorage.getItem('magisk-font-overrides') || JSON.stringify(DEFAULT_WEIGHTS))
-
-const showStatus = (msg, isError = false) => {
-  el.statusContainer.classList.remove('hidden')
-  el.statusMessage.textContent = msg
-  el.statusMessage.style.color = isError ? '#ff4d4d' : '#4facfe'
+// Elements
+const els = {
+  app: $('#app'),
+  uploadZone: $('#upload-zone'),
+  fileInput: $('#font-upload'),
+  stepUpload: $('#step-upload'),
+  stepConfig: $('#step-config'),
+  selectedFilename: $('#selected-filename'),
+  resetUploadBtn: $('#reset-upload'),
+  
+  modName: $('#mod-name'),
+  modAuthor: $('#mod-author'),
+  modId: $('#mod-id'),
+  modVersion: $('#mod-version'),
+  modDesc: $('#mod-desc'),
+  
+  overridesList: $('#overrides-list'),
+  addOverrideBtn: $('#add-override-btn'),
+  generateBtn: $('#generate-btn'),
+  toast: $('#toast')
 }
 
-const cleanId = (n) => n.toLowerCase().split('.')[0].replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '')
-const getBaseName = (n) => n.split('.')[0].replace(/[_-]/g, ' ')
-
-const createOverrideItem = (val = '') => {
-  const div = document.createElement('div')
-  div.className = 'override-item'
-  div.innerHTML = `<input type="text" class="override-input" value="${val}" placeholder="e.g. Roboto-Regular.ttf" /><button class="remove-btn" title="Remove">&times;</button>`
-  div.querySelector('.remove-btn').onclick = () => div.remove()
-  return div
+// Initialization
+const init = () => {
+  // Restore saved values
+  els.modAuthor.value = localStorage.getItem('magisk-font-author') || ''
+  const savedOverrides = JSON.parse(localStorage.getItem('magisk-font-overrides') || 'null')
+  if (savedOverrides) state.overrides = savedOverrides
+  
+  renderOverrides()
+  setupEventListeners()
 }
 
-weightsToUse.forEach(w => el.overridesList.appendChild(createOverrideItem(w)))
-el.addOverrideBtn.onclick = () => el.overridesList.appendChild(createOverrideItem())
+// Event Listeners
+const setupEventListeners = () => {
+  // Global Drag Prevention
+  window.addEventListener('dragover', (e) => e.preventDefault())
+  window.addEventListener('drop', (e) => e.preventDefault())
 
-el.fontUpload.onchange = ({ target }) => {
-  const file = target.files[0]
+  // Drag & Drop
+  els.uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    els.uploadZone.classList.add('drag-over')
+  })
+
+  els.uploadZone.addEventListener('dragleave', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    els.uploadZone.classList.remove('drag-over')
+  })
+
+  els.uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    els.uploadZone.classList.remove('drag-over')
+    const file = e.dataTransfer.files[0]
+    handleFile(file)
+  })
+
+  els.fileInput.addEventListener('change', (e) => {
+    handleFile(e.target.files[0])
+  })
+
+  // Reset
+  els.resetUploadBtn.addEventListener('click', () => {
+    state.file = null
+    els.fileInput.value = ''
+    switchStep('upload')
+  })
+
+  // Overrides
+  els.addOverrideBtn.addEventListener('click', () => {
+    state.overrides.push('')
+    renderOverrides()
+  })
+
+  // Generate
+  els.generateBtn.addEventListener('click', generateModule)
+}
+
+// Logic
+const handleFile = (file) => {
   if (!file) return
-  if (!['.ttf', '.otf', '.ttc', '.otc'].some(ext => file.name.toLowerCase().endsWith(ext))) {
-    alert('Unsupported font format!')
-    return target.value = ''
+  
+  const ext = file.name.split('.').pop().toLowerCase()
+  if (!['ttf', 'otf', 'ttc', 'otc'].includes(ext)) {
+    showToast('Unsupported file format. Please use TTF, OTF, TTC, or OTC.', 'error')
+    return
   }
-  const baseName = getBaseName(file.name)
-  el.modName.value = baseName.split(' ').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
-  el.modId.value = cleanId(file.name)
-  el.selectedFontName.textContent = file.name
-  el.initialUpload.classList.add('hidden')
-  el.mainContent.classList.remove('hidden')
+
+  state.file = file
+  state.fileName = file.name
+  
+  // Auto-fill form
+  const baseName = file.name.replace(/\.[^/.]+$/, "") // remove extension
+  els.selectedFilename.textContent = file.name
+  els.modName.value = formatName(baseName)
+  els.modId.value = formatId(baseName)
+  
+  switchStep('config')
 }
 
-el.moreOptionsBtn.onclick = () => {
-  const isHidden = el.extraFields.classList.toggle('hidden')
-  el.moreOptionsBtn.textContent = isHidden ? 'More Options' : 'Less Options'
+const switchStep = (step) => {
+  if (step === 'upload') {
+    els.stepConfig.style.display = 'none'
+    els.stepUpload.style.display = 'block'
+    els.stepUpload.classList.add('active')
+    els.stepConfig.classList.remove('active')
+  } else {
+    els.stepUpload.style.display = 'none'
+    els.stepConfig.style.display = 'block'
+    els.stepConfig.classList.add('active')
+    els.stepUpload.classList.remove('active')
+  }
 }
 
-el.generateBtn.onclick = async () => {
-  const file = el.fontUpload.files[0]
-  if (!file) return
-  try {
-    showStatus('Generating module...')
-    const zip = new JSZip(), id = el.modId.value.trim(), name = el.modName.value.trim(), author = el.modAuthor.value.trim()
-    zip.file('module.prop', `id=${id}\nname=${name}\nversion=${el.modVersion.value.trim()}\nversionCode=1\nauthor=${author}\ndescription=${el.modDesc.value.trim()}`)
+const formatName = (str) => {
+  return str.split(/[-_]/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+}
+
+const formatId = (str) => {
+  return str.toLowerCase().replace(/[^a-z0-9._-]/g, '_')
+}
+
+const renderOverrides = () => {
+  els.overridesList.innerHTML = ''
+  state.overrides.forEach((override, index) => {
+    const div = document.createElement('div')
+    div.className = 'override-item'
     
-    const fontData = await file.arrayBuffer(), inputs = [...document.querySelectorAll('.override-input')], fontsDir = zip.folder('system/fonts')
-    inputs.forEach(i => {
-      let t = i.value.trim(); if (!t) return
-      fontsDir.file(t.includes('.') ? t : t + '.ttf', fontData)
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.value = override
+    input.placeholder = 'e.g. Roboto-Regular.ttf'
+    input.addEventListener('input', (e) => {
+      state.overrides[index] = e.target.value
     })
 
-    zip.file('customize.sh', `ui_print "- Installing ${name}..."\nui_print "- Overriding fonts..."\n\nset_perm_recursive $MODPATH/system 0 0 0755 0644 u:object_r:system_file:s0\nui_print "- Done!"`)
-    zip.file('post-fs-data.sh', `#!/system/bin/sh\nMODDIR=\${0%/*}\nfind \$MODDIR/system -name "*.ttf" -o -name "*.otf" | while read f; do t=\$(echo "\$f" | sed "s|\$MODDIR||"); [ -f "\$t" ] && mount -o bind "\$f" "\$t"; done`)
+    const removeBtn = document.createElement('button')
+    removeBtn.className = 'remove-btn'
+    removeBtn.innerHTML = '&times;'
+    removeBtn.title = 'Remove'
+    removeBtn.addEventListener('click', () => {
+      state.overrides.splice(index, 1)
+      renderOverrides()
+    })
 
-    localStorage.setItem('magisk-font-author', author)
-    localStorage.setItem('magisk-font-overrides', JSON.stringify(inputs.map(i => i.value.trim()).filter(Boolean)))
-
-    const blob = await zip.generateAsync({ type: 'blob' })
-    const url = URL.createObjectURL(blob), a = document.createElement('a')
-    Object.assign(a, { href: url, download: `${id}.zip` }).click()
-    URL.revokeObjectURL(url)
-    showStatus(`Module generated!`)
-  } catch (err) { showStatus(`Error: ${err.message}`, true) }
+    div.appendChild(input)
+    div.appendChild(removeBtn)
+    els.overridesList.appendChild(div)
+  })
 }
+
+const showToast = (message, type = 'success') => {
+  els.toast.textContent = message
+  els.toast.className = `toast show ${type}`
+  
+  setTimeout(() => {
+    els.toast.className = 'toast'
+  }, 3000)
+}
+
+const generateModule = async () => {
+  if (!state.file) return
+
+  const modName = els.modName.value.trim() || 'Custom Font'
+  const modId = els.modId.value.trim() || 'custom_font'
+  const modAuthor = els.modAuthor.value.trim() || 'Unknown'
+  const modVersion = els.modVersion.value.trim() || 'v1.0'
+  const modDesc = els.modDesc.value.trim() || 'Custom font module'
+  
+  // Filter empty overrides
+  const cleanOverrides = state.overrides.map(s => s.trim()).filter(Boolean)
+  if (cleanOverrides.length === 0) {
+    showToast('Please add at least one system font to replace.', 'error')
+    return
+  }
+
+  els.generateBtn.disabled = true
+  els.generateBtn.textContent = 'Generating...'
+
+  try {
+    const zip = new JSZip()
+    
+    // module.prop
+    zip.file('module.prop', `id=${modId}
+name=${modName}
+version=${modVersion}
+versionCode=1
+author=${modAuthor}
+description=${modDesc}`)
+
+    // system/fonts
+    const fontsDir = zip.folder('system/fonts')
+    const fontData = await state.file.arrayBuffer()
+    
+    cleanOverrides.forEach(filename => {
+      // Ensure extension
+      const finalName = filename.includes('.') ? filename : `${filename}.ttf`
+      fontsDir.file(finalName, fontData)
+    })
+
+    // scripts
+    zip.file('customize.sh', `ui_print "- Installing ${modName}..."
+ui_print "- Overriding fonts..."
+
+set_perm_recursive $MODPATH/system 0 0 0755 0644 u:object_r:system_file:s0
+ui_print "- Done!"`)
+
+    zip.file('post-fs-data.sh', `#!/system/bin/sh
+MODDIR=\${0%/*}
+find $MODDIR/system -name "*.ttf" -o -name "*.otf" | while read f; do
+  t=$(echo "$f" | sed "s|$MODDIR||")
+  [ -f "$t" ] && mount -o bind "$f" "$t"
+done`)
+
+    // Save preferences
+    localStorage.setItem('magisk-font-author', modAuthor)
+    localStorage.setItem('magisk-font-overrides', JSON.stringify(cleanOverrides))
+
+    // Generate zip
+    const content = await zip.generateAsync({ type: 'blob' })
+    const url = URL.createObjectURL(content)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${modId}.zip`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    showToast('Module generated successfully!', 'success')
+  } catch (err) {
+    console.error(err)
+    showToast('Failed to generate module.', 'error')
+  } finally {
+    els.generateBtn.disabled = false
+    els.generateBtn.innerHTML = `<span>Generate Module</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`
+  }
+}
+
+// Start
+init()
