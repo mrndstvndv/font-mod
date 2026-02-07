@@ -1,4 +1,3 @@
-import './style.css'
 import JSZip from 'jszip'
 
 // Utilities
@@ -35,19 +34,61 @@ const els = {
   overridesList: $('#overrides-list'),
   addOverrideBtn: $('#add-override-btn'),
   generateBtn: $('#generate-btn'),
-  toast: $('#toast')
+  toast: $('#toast'),
+  themeToggle: $('#theme-toggle')
 }
 
-// Initialization
-const init = () => {
-  // Restore saved values
-  els.modAuthor.value = localStorage.getItem('magisk-font-author') || ''
-  const savedOverrides = JSON.parse(localStorage.getItem('magisk-font-overrides') || 'null')
-  if (savedOverrides) state.overrides = savedOverrides
+// Theme Logic
+const setTheme = (theme) => {
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
   
-  renderOverrides()
-  setupEventListeners()
+  const moonIcon = els.themeToggle.querySelector('.moon-icon')
+  const sunIcon = els.themeToggle.querySelector('.sun-icon')
+  
+  if (theme === 'dark') {
+    moonIcon.style.display = 'none'
+    sunIcon.style.display = 'block'
+  } else {
+    moonIcon.style.display = 'block'
+    sunIcon.style.display = 'none'
+  }
 }
+
+const syncThemeIcons = () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light'
+  const moonIcon = els.themeToggle.querySelector('.moon-icon')
+  const sunIcon = els.themeToggle.querySelector('.sun-icon')
+  
+  if (currentTheme === 'dark') {
+    moonIcon.style.display = 'none'
+    sunIcon.style.display = 'block'
+  } else {
+    moonIcon.style.display = 'block'
+    sunIcon.style.display = 'none'
+  }
+}
+
+  // Initialization
+  const init = () => {
+    // Theme
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      setTheme(savedTheme)
+    } else {
+      syncThemeIcons()
+    }
+    // Restore saved values
+    els.modAuthor.value = localStorage.getItem('magisk-font-author') || ''
+    const savedOverrides = JSON.parse(localStorage.getItem('magisk-font-overrides') || 'null')
+    if (savedOverrides) state.overrides = savedOverrides
+    
+    renderOverrides()
+    setupEventListeners()
+    
+    // Explicitly set initial state
+    switchStep('upload')
+  }
 
 // Event Listeners
 const setupEventListeners = () => {
@@ -89,12 +130,18 @@ const setupEventListeners = () => {
 
   // Overrides
   els.addOverrideBtn.addEventListener('click', () => {
-    state.overrides.push('')
+    state.overrides.unshift('')
     renderOverrides()
   })
 
   // Generate
   els.generateBtn.addEventListener('click', generateModule)
+
+  // Theme Toggle
+  els.themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'light'
+    setTheme(current === 'dark' ? 'light' : 'dark')
+  })
 }
 
 // Logic
@@ -119,19 +166,21 @@ const handleFile = (file) => {
   switchStep('config')
 }
 
-const switchStep = (step) => {
-  if (step === 'upload') {
-    els.stepConfig.style.display = 'none'
-    els.stepUpload.style.display = 'block'
-    els.stepUpload.classList.add('active')
-    els.stepConfig.classList.remove('active')
-  } else {
-    els.stepUpload.style.display = 'none'
-    els.stepConfig.style.display = 'block'
-    els.stepConfig.classList.add('active')
-    els.stepUpload.classList.remove('active')
+  const switchStep = (step) => {
+    if (step === 'upload') {
+      els.stepConfig.classList.remove('active')
+      els.stepConfig.style.display = 'none'
+
+      els.stepUpload.style.display = 'flex'
+      requestAnimationFrame(() => els.stepUpload.classList.add('active'))
+    } else {
+      els.stepUpload.classList.remove('active')
+      els.stepUpload.style.display = 'none'
+
+      els.stepConfig.style.display = 'block'
+      requestAnimationFrame(() => els.stepConfig.classList.add('active'))
+    }
   }
-}
 
 const formatName = (str) => {
   return str.split(/[-_]/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
@@ -246,7 +295,6 @@ done`)
     a.click()
     URL.revokeObjectURL(url)
 
-    showToast('Module generated successfully!', 'success')
   } catch (err) {
     console.error(err)
     showToast('Failed to generate module.', 'error')

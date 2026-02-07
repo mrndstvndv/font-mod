@@ -4,20 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Magisk Font Maker</title>
+  <script>
+    (() => {
+      const stored = localStorage.getItem('theme')
+      if (stored === 'dark' || stored === 'light') {
+        document.documentElement.setAttribute('data-theme', stored)
+      }
+    })()
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
   <div id="app">
     <header class="header">
       <div class="logo">Magisk Font Maker</div>
       <div class="subtitle">Turn any font into a system-wide Magisk module.</div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
     </header>
 
     <main>
       <!-- Step 1: Upload -->
-      <section id="step-upload" class="step active">
+      <section id="step-upload" class="step">
         <div class="upload-zone" id="upload-zone">
           <input type="file" id="font-upload" accept=".ttf,.otf,.ttc,.otc" />
           <div class="upload-content">
@@ -31,57 +44,59 @@
       </section>
 
       <!-- Step 2: Configure -->
-      <section id="step-config" class="step">
-        <div class="file-info">
-          <div class="file-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-          <span id="selected-filename" class="filename">font.ttf</span>
-          <button id="reset-upload" class="icon-btn" aria-label="Remove file">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-
+      <section id="step-config" class="step" style="display: none;">
         <div class="form-grid">
-          <div class="form-group">
+          <div class="form-group full-width" style="margin-bottom: 24px">
+            <label>Selected Font</label>
+            <div class="file-info">
+              <div class="file-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <span id="selected-filename" class="filename">font.ttf</span>
+              <button id="reset-upload" class="icon-btn" aria-label="Remove file">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 24px">
             <label for="mod-name">Module Name</label>
             <input type="text" id="mod-name" placeholder="My Custom Font" />
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 24px">
             <label for="mod-author">Author</label>
             <input type="text" id="mod-author" placeholder="Your Name" />
           </div>
+          <details class="advanced-options">
+            <summary>Advanced Options</summary>
+            <div class="advanced-content">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="mod-id">Module ID</label>
+                  <input type="text" id="mod-id" placeholder="my_custom_font" />
+                </div>
+                <div class="form-group">
+                  <label for="mod-version">Version</label>
+                  <input type="text" id="mod-version" value="v1.0" />
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label for="mod-desc">Description</label>
+                <textarea id="mod-desc" rows="2" placeholder="Brief description of your module"></textarea>
+              </div>
+              
+              <div class="overrides-section">
+                <div class="overrides-header">
+                  <label>System Fonts to Replace</label>
+                  <button id="add-override-btn" class="text-btn">+ Add</button>
+                </div>
+                <div id="overrides-list" class="overrides-list">
+                  <!-- Overrides injected here -->
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
-
-        <details class="advanced-options">
-          <summary>Advanced Options</summary>
-          <div class="advanced-content">
-            <div class="form-grid">
-              <div class="form-group">
-                <label for="mod-id">Module ID</label>
-                <input type="text" id="mod-id" placeholder="my_custom_font" />
-              </div>
-              <div class="form-group">
-                <label for="mod-version">Version</label>
-                <input type="text" id="mod-version" value="v1.0" />
-              </div>
-            </div>
-            <div class="form-group full-width">
-              <label for="mod-desc">Description</label>
-              <textarea id="mod-desc" rows="2" placeholder="Brief description of your module"></textarea>
-            </div>
-            
-            <div class="overrides-section">
-              <div class="overrides-header">
-                <label>System Fonts to Replace</label>
-                <button id="add-override-btn" class="text-btn">+ Add</button>
-              </div>
-              <div id="overrides-list" class="overrides-list">
-                <!-- Overrides injected here -->
-              </div>
-            </div>
-          </div>
-        </details>
 
         <div class="actions">
           <button id="generate-btn" class="primary-btn">
@@ -93,10 +108,6 @@
 
       <div id="toast" class="toast"></div>
     </main>
-
-    <footer>
-      <p>Minimal Magisk Font Maker</p>
-    </footer>
   </div>
   <script type="module" src="/src/main.js"></script>
 </body>
