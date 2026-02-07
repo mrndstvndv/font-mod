@@ -46,7 +46,7 @@
       <!-- Step 2: Configure -->
       <section id="step-config" class="step" style="display: none;">
         <div class="form-grid">
-          <div class="form-group full-width" style="margin-bottom: 24px">
+          <div class="form-group">
             <label>Selected Font</label>
             <div class="file-info">
               <div class="file-icon">
@@ -59,13 +59,13 @@
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 24px">
+          <div class="form-group">
             <label for="mod-name">Module Name</label>
             <input type="text" id="mod-name" placeholder="My Custom Font" />
           </div>
-          <div class="form-group" style="margin-bottom: 24px">
+          <div class="form-group">
             <label for="mod-author">Author</label>
-            <input type="text" id="mod-author" placeholder="Your Name" />
+            <input type="text" id="mod-author" placeholder="Your Name" required />
           </div>
           <details class="advanced-options">
             <summary>Advanced Options</summary>
@@ -80,7 +80,7 @@
                   <input type="text" id="mod-version" value="v1.0" />
                 </div>
               </div>
-              <div class="form-group full-width">
+              <div class="form-group">
                 <label for="mod-desc">Description</label>
                 <textarea id="mod-desc" rows="2" placeholder="Brief description of your module"></textarea>
               </div>

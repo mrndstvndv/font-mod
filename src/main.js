@@ -15,6 +15,9 @@ const state = {
   ]
 }
 
+let toastTimer = null
+let toastCleanupTimer = null
+
 // Elements
 const els = {
   app: $('#app'),
@@ -220,12 +223,19 @@ const renderOverrides = () => {
 }
 
 const showToast = (message, type = 'success') => {
+  if (toastTimer) clearTimeout(toastTimer)
+  if (toastCleanupTimer) clearTimeout(toastCleanupTimer)
+
   els.toast.textContent = message
-  els.toast.className = `toast show ${type}`
-  
-  setTimeout(() => {
-    els.toast.className = 'toast'
-  }, 3000)
+  els.toast.className = `toast ${type}`
+  requestAnimationFrame(() => els.toast.classList.add('show'))
+
+  toastTimer = setTimeout(() => {
+    els.toast.classList.remove('show')
+    toastCleanupTimer = setTimeout(() => {
+      els.toast.className = 'toast'
+    }, 300)
+  }, 2000)
 }
 
 const generateModule = async () => {
@@ -233,9 +243,14 @@ const generateModule = async () => {
 
   const modName = els.modName.value.trim() || 'Custom Font'
   const modId = els.modId.value.trim() || 'custom_font'
-  const modAuthor = els.modAuthor.value.trim() || 'Unknown'
+  const modAuthor = els.modAuthor.value.trim()
   const modVersion = els.modVersion.value.trim() || 'v1.0'
   const modDesc = els.modDesc.value.trim() || 'Custom font module'
+
+  if (!modAuthor) {
+    showToast('Please enter an author name before generating.', 'error')
+    return
+  }
   
   // Filter empty overrides
   const cleanOverrides = state.overrides.map(s => s.trim()).filter(Boolean)
