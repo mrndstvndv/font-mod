@@ -1,6 +1,6 @@
 @font-face {
-  font-family: 'Geist Pixel Square';
-  src: url('/GeistPixel-Square.woff2') format('woff2');
+  font-family: "Geist Pixel Square";
+  src: url("/GeistPixel-Square.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -12,6 +12,7 @@
   --text-primary: #111111;
   --text-secondary: #555555;
   --border-color: #e2e2e2;
+  --upload-border-color: #b7b7b7;
   --focus-ring: #000000;
   --primary-btn: #000000;
   --primary-btn-text: #ffffff;
@@ -23,17 +24,18 @@
   --toast-border: rgba(0, 0, 0, 0.12);
   --toast-success: #24d17e;
   --toast-error: var(--error-color);
-  
+
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 56px;
-  
+
   --radius-sm: 4px;
   --radius-md: 8px;
-  
-  --font-family: 'Geist Pixel Square', 'Inter', system-ui, -apple-system, sans-serif;
+
+  --font-family:
+    "Geist Pixel Square", "Inter", system-ui, -apple-system, sans-serif;
 }
 
 [data-theme="dark"] {
@@ -41,6 +43,7 @@
   --text-primary: #f5f5f5;
   --text-secondary: #b8b8b8;
   --border-color: #2b2b2b;
+  --upload-border-color: #3f3f3f;
   --focus-ring: #ffffff;
   --primary-btn: #ffffff;
   --primary-btn-text: #000000;
@@ -59,6 +62,7 @@
     --text-primary: #f5f5f5;
     --text-secondary: #b8b8b8;
     --border-color: #2b2b2b;
+    --upload-border-color: #3f3f3f;
     --focus-ring: #ffffff;
     --primary-btn: #ffffff;
     --primary-btn-text: #000000;
@@ -95,7 +99,9 @@ body {
   min-height: 100dvh;
   padding: var(--spacing-md);
   overflow-y: auto;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 #app {
@@ -148,7 +154,6 @@ header {
 
 /* Upload Zone */
 .upload-zone {
-  --upload-border-color: var(--border-color);
   --upload-dash: 8px;
   --upload-gap: 8px;
   border: none;
@@ -164,19 +169,44 @@ header {
 }
 
 .upload-zone::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: var(--radius-md);
   pointer-events: none;
   background:
-    repeating-linear-gradient(90deg, var(--upload-border-color) 0 var(--upload-dash), transparent var(--upload-dash) calc(var(--upload-dash) + var(--upload-gap))) top/100% 1px no-repeat,
-    repeating-linear-gradient(90deg, var(--upload-border-color) 0 var(--upload-dash), transparent var(--upload-dash) calc(var(--upload-dash) + var(--upload-gap))) bottom/100% 1px no-repeat,
-    repeating-linear-gradient(0deg, var(--upload-border-color) 0 var(--upload-dash), transparent var(--upload-dash) calc(var(--upload-dash) + var(--upload-gap))) left/1px 100% no-repeat,
-    repeating-linear-gradient(0deg, var(--upload-border-color) 0 var(--upload-dash), transparent var(--upload-dash) calc(var(--upload-dash) + var(--upload-gap))) right/1px 100% no-repeat;
+    repeating-linear-gradient(
+        90deg,
+        var(--upload-border-color) 0 var(--upload-dash),
+        transparent var(--upload-dash)
+          calc(var(--upload-dash) + var(--upload-gap))
+      )
+      top/100% 1px no-repeat,
+    repeating-linear-gradient(
+        90deg,
+        var(--upload-border-color) 0 var(--upload-dash),
+        transparent var(--upload-dash)
+          calc(var(--upload-dash) + var(--upload-gap))
+      )
+      bottom/100% 1px no-repeat,
+    repeating-linear-gradient(
+        0deg,
+        var(--upload-border-color) 0 var(--upload-dash),
+        transparent var(--upload-dash)
+          calc(var(--upload-dash) + var(--upload-gap))
+      )
+      left/1px 100% no-repeat,
+    repeating-linear-gradient(
+        0deg,
+        var(--upload-border-color) 0 var(--upload-dash),
+        transparent var(--upload-dash)
+          calc(var(--upload-dash) + var(--upload-gap))
+      )
+      right/1px 100% no-repeat;
 }
 
-.upload-zone:hover, .upload-zone.drag-over {
+.upload-zone:hover,
+.upload-zone.drag-over {
   --upload-border-color: var(--text-primary);
   background-color: var(--upload-bg-hover);
 }
@@ -225,8 +255,14 @@ header {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Form Styles */
@@ -242,7 +278,6 @@ header {
   margin-bottom: var(--spacing-md);
 }
 
-
 .form-group label {
   font-size: 0.85rem;
   font-weight: 500;
@@ -250,21 +285,25 @@ header {
   color: var(--text-secondary);
 }
 
-.form-group input, .form-group textarea {
+:where(.form-group input, .form-group textarea, .override-item input) {
   padding: var(--spacing-sm) 0;
   border: none;
   border-bottom: 1px solid var(--border-color);
   border-radius: 0;
   font-family: inherit;
-  font-size: 1rem;
   transition: border-color 0.2s ease;
   background: transparent;
   color: var(--text-primary);
 }
 
-.form-group input:focus, .form-group textarea:focus {
+:where(.form-group input, .form-group textarea, .override-item input):focus {
   outline: none;
   border-color: var(--focus-ring);
+}
+
+.form-group input,
+.form-group textarea {
+  font-size: 1rem;
 }
 
 textarea {
@@ -308,7 +347,7 @@ textarea {
 }
 
 .icon-btn:hover {
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
   color: var(--text-primary);
 }
 
@@ -332,21 +371,17 @@ textarea {
   transition: border-color 0.2s;
 }
 
-.advanced-options summary:hover {
-  color: var(--text-primary);
-}
-
 .advanced-options summary::-webkit-details-marker {
   display: none;
 }
 
 .advanced-options summary::after {
-  content: '+';
+  content: "+";
   font-size: 1.1em;
 }
 
 .advanced-options[open] summary::after {
-  content: '-';
+  content: "-";
 }
 
 .advanced-content {
@@ -396,17 +431,7 @@ textarea {
 
 .override-item input {
   flex-grow: 1;
-  padding: var(--spacing-sm) 0;
-  border: none;
-  border-bottom: 1px solid var(--border-color);
   font-size: 0.9rem;
-  background: transparent;
-  color: var(--text-primary);
-}
-
-.override-item input:focus {
-  outline: none;
-  border-color: var(--focus-ring);
 }
 
 .override-item .remove-btn {
@@ -442,7 +467,9 @@ textarea {
   font-weight: 500;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -459,7 +486,6 @@ textarea {
   cursor: not-allowed;
   transform: none;
 }
-
 
 /* Toast */
 .toast {
@@ -480,9 +506,13 @@ textarea {
   line-height: 1.35;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
   z-index: 100;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -494,7 +524,7 @@ textarea {
 }
 
 .toast::before {
-  content: '';
+  content: "";
   width: 8px;
   height: 8px;
   border-radius: 999px;
@@ -507,27 +537,17 @@ textarea {
   transform: translateX(-50%) translateY(0);
 }
 
-.toast.success {
-  --toast-accent: var(--toast-success);
-}
-
 .toast.error {
   --toast-accent: var(--toast-error);
   border-color: color-mix(in srgb, var(--toast-error) 55%, transparent);
 }
 
-
-
 /* Responsive */
 @media (max-width: 600px) {
-  .form-grid {
-    flex-direction: column;
-  }
-  
   .upload-zone {
     padding: 40px 20px;
   }
-  
+
   .logo {
     font-size: 1.5rem;
   }
